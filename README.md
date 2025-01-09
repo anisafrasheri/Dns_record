@@ -38,23 +38,23 @@ A full-stack web application that allows users to fetch and display DNS records 
 ```bash
 git clone https://github.com/your-username/dns-record-fetcher.git
 cd dns-record-fetcher
-
-Step 2: Install Dependencies
-bash
-Copy code
+```
+### Step 2: Install Dependencies
+```bash
 pip install flask dnspython
-Step 3: Run the Application
-bash
-Copy code
+```
+### Step 3: Run the Application
+```bash
 python dns_record.py
-Step 4: Access the Application
+```
+### Step 4: Access the Application
 Open your browser and go to:
 http://127.0.0.1:5000/
 
-How It Works
-Homepage:
+### How It Works
+**Homepage**:
 Enter a domain name (e.g., example.com).
 Click the "Fetch DNS Records" button.
-DNS Record Results:
+**DNS Record Results**:
 View the DNS records grouped by type (e.g., A, MX, NS).
 Handles invalid inputs and errors gracefully with user-friendly messages.
