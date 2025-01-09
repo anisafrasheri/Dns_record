@@ -3,6 +3,11 @@ import dns.resolver
 
 app = Flask(__name__)
 
+# Create a custom DNS resolver and set a timeout
+resolver = dns.resolver.Resolver()
+resolver.timeout = 10  # Timeout in seconds
+resolver.lifetime = 15  # Total time before considering the query failed
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -10,24 +15,25 @@ def home():
 @app.route("/get_dns_records", methods=["POST"])
 def get_dns_records():
     website = request.json.get("website")
-    dns_records = {}
+    if not website:
+        return jsonify({"error": "No website provided"}), 400
 
-    # DNS record types to fetch
+    dns_records = {}
     record_types = ['A', 'AAAA', 'MX', 'CNAME', 'NS', 'TXT', 'SOA']
 
+    # Fetch the DNS records for each type using the custom resolver
     for record_type in record_types:
         try:
-            records = dns.resolver.resolve(website, record_type)
-            if record_type not in dns_records:
-                dns_records[record_type] = []
-            for record in records:
-                dns_records[record_type].append(record.to_text())
+            records = resolver.resolve(website, record_type)
+            dns_records[record_type] = [record.to_text() for record in records]
         except dns.resolver.NoAnswer:
             dns_records[record_type] = ['No records found']
         except dns.resolver.NXDOMAIN:
             return jsonify({"error": f"The domain '{website}' does not exist."}), 404
+        except dns.resolver.Timeout:
+            dns_records[record_type] = ['Query timed out']
         except Exception as e:
-            return jsonify({"error": f"Error fetching {record_type} records: {str(e)}"}), 500
+            dns_records[record_type] = [f"Error: {str(e)}"]
 
     return jsonify(dns_records)
 
