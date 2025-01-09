@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DNS Record Fetcher</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 80%;
+      margin: auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    form {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 50%;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .results {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .record {
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DNS Record Fetcher</h1>
+    <form id="dns-form">
+      <input type="text" id="website" placeholder="Enter website URL (e.g., example.com)" required />
+      <button type="submit">Fetch DNS Records</button>
+    </form>
+    <div id="output" class="results"></div>
+  </div>
+
+  <script>
+    document.getElementById("dns-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const website = document.getElementById("website").value;
+      const output = document.getElementById("output");
+
+      output.innerHTML = "<p>Fetching DNS records...</p>";
+
+      try {
+        const response = await fetch("/get_dns_records", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ website }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          output.innerHTML = `<p style="color: red;">Error: ${error.error}</p>`;
+          return;
+        }
+
+        const dnsRecords = await response.json();
+        output.innerHTML = "";
+
+        for (const [recordType, records] of Object.entries(dnsRecords)) {
+          const recordDiv = document.createElement("div");
+          recordDiv.classList.add("record");
+
+          const title = document.createElement("h3");
+          title.textContent = `${recordType} Records:`;
+          recordDiv.appendChild(title);
+
+          const list = document.createElement("ul");
+          records.forEach((record) => {
+            const listItem = document.createElement("li");
+            listItem.textContent = record;
+            list.appendChild(listItem);
+          });
+          recordDiv.appendChild(list);
+
+          output.appendChild(recordDiv);
+        }
+      } catch (error) {
+        output.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
