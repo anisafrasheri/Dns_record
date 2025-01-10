@@ -84,6 +84,10 @@ def dns_propagation():
             resolver.nameservers = [dns_server]
             records = resolver.resolve(website, 'A')
             propagation_results[dns_server] = [record.to_text() for record in records]
+        except dns.resolver.NXDOMAIN:
+            propagation_results[dns_server] = ["Domain does not exist."]
+        except dns.resolver.NoAnswer:
+            propagation_results[dns_server] = ["No DNS records found."]
         except Exception as e:
             propagation_results[dns_server] = [f"Error: {str(e)}"]
 

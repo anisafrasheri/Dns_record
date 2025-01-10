@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #e6f7ff; /* Light blue background */
+      background-color: #e6f7ff;
       margin: 0;
       padding: 0;
     }
@@ -20,7 +20,7 @@
 
     h1 {
       text-align: center;
-      color: #007BFF; /* Deep blue */
+      color: #007BFF;
       font-size: 36px;
       margin-bottom: 20px;
       text-transform: uppercase;
@@ -44,7 +44,7 @@
     }
 
     input[type="text"]:focus {
-      border-color: #66b3ff; /* Light blue focus */
+      border-color: #66b3ff;
       outline: none;
     }
 
@@ -112,7 +112,6 @@
       font-size: 18px;
     }
 
-    /* Notification Box */
     .notification {
       position: fixed;
       bottom: 20px;
@@ -160,29 +159,30 @@
       <button id="reverse-dns-btn">Reverse DNS Lookup</button>
       <button id="health-check-btn">Domain Health Check</button>
       <button id="propagation-btn">DNS Propagation</button>
-      <button id="api-docs-btn">API Documentation</button>
     </div>
     <div id="output" class="results"></div>
     <div id="additional-output" class="additional-tools"></div>
   </div>
 
-  <!-- Notification Box -->
   <div id="notification" class="notification">Record copied to clipboard!</div>
 
   <script>
-    document.getElementById("dns-form").addEventListener("submit", async (event) => {
+    const websiteInput = document.getElementById("website");
+    const output = document.getElementById("output");
+    const additionalOutput = document.getElementById("additional-output");
+
+    document.getElementById("dns-form").addEventListener("submit", fetchDNSRecords);
+
+    async function fetchDNSRecords(event) {
       event.preventDefault();
-      const website = document.getElementById("website").value;
-      const output = document.getElementById("output");
+      const website = websiteInput.value;
 
       output.innerHTML = "<p class='loading-message'>Fetching DNS records...</p>";
 
       try {
         const response = await fetch("/get_dns_records", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ website }),
         });
 
@@ -207,7 +207,7 @@
           records.forEach((record) => {
             const listItem = document.createElement("li");
             listItem.textContent = record;
-            listItem.addEventListener("click", () => copyToClipboard(record)); // Click event to copy
+            listItem.addEventListener("click", () => copyToClipboard(record));
             list.appendChild(listItem);
           });
           recordDiv.appendChild(list);
@@ -217,38 +217,19 @@
       } catch (error) {
         output.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
       }
-    });
+    }
 
-    document.getElementById("reverse-dns-btn").addEventListener("click", async () => {
-      const ip = prompt("Enter IP address for reverse DNS lookup:");
-      if (!ip) return;
-      const additionalOutput = document.getElementById("additional-output");
-      additionalOutput.innerHTML = "<p class='loading-message'>Performing reverse DNS lookup...</p>";
-
-      try {
-        const response = await fetch("/reverse_dns", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ip }),
-        });
-
-        const result = await response.json();
-        if (result.error) throw new Error(result.error);
-
-        additionalOutput.innerHTML = `<p>Reverse DNS result for ${ip}: <strong>${result.domain}</strong></p>`;
-      } catch (err) {
-        additionalOutput.innerHTML = `<p class="error-message">${err.message}</p>`;
+    async function performAction(url, actionName) {
+      const website = websiteInput.value;
+      if (!website) {
+        additionalOutput.innerHTML = `<p class="error-message">Please enter a domain first.</p>`;
+        return;
       }
-    });
 
-    document.getElementById("health-check-btn").addEventListener("click", async () => {
-      const website = prompt("Enter website URL for health check:");
-      if (!website) return;
-      const additionalOutput = document.getElementById("additional-output");
-      additionalOutput.innerHTML = "<p class='loading-message'>Checking domain health...</p>";
+      additionalOutput.innerHTML = `<p class='loading-message'>Performing ${actionName}...</p>`;
 
       try {
-        const response = await fetch("/domain_health", {
+        const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ website }),
@@ -257,11 +238,19 @@
         const result = await response.json();
         if (result.error) throw new Error(result.error);
 
-        additionalOutput.innerHTML = "<ul>" + Object.entries(result).map(([key, value]) => `<li>${key}: ${value}</li>`).join("") + "</ul>";
+        additionalOutput.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
       } catch (err) {
         additionalOutput.innerHTML = `<p class="error-message">${err.message}</p>`;
       }
-    });
+    }
+
+    document.getElementById("reverse-dns-btn").addEventListener("click", () =>
+      performAction("/reverse_dns", "Reverse DNS Lookup")
+    );
+
+    document.getElementById("health-check-btn").addEventListener("click", () =>
+      performAction("/domain_health", "Domain Health Check")
+    );
 
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text)
