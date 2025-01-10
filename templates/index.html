@@ -128,6 +128,7 @@
 
     .tool-buttons {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       gap: 20px;
       margin-top: 20px;
@@ -159,6 +160,9 @@
       <button id="reverse-dns-btn">Reverse DNS Lookup</button>
       <button id="health-check-btn">Domain Health Check</button>
       <button id="propagation-btn">DNS Propagation</button>
+      <button id="blacklist-check-btn">Blacklist Check</button>
+      <button id="whois-btn">WHOIS Lookup</button>
+      <button id="ssl-check-btn">SSL/TLS Certificate Check</button>
     </div>
     <div id="output" class="results"></div>
     <div id="additional-output" class="additional-tools"></div>
@@ -171,6 +175,7 @@
     const output = document.getElementById("output");
     const additionalOutput = document.getElementById("additional-output");
 
+    // Ensure the form is processed correctly and all buttons use the same input
     document.getElementById("dns-form").addEventListener("submit", fetchDNSRecords);
 
     async function fetchDNSRecords(event) {
@@ -250,6 +255,18 @@
 
     document.getElementById("health-check-btn").addEventListener("click", () =>
       performAction("/domain_health", "Domain Health Check")
+    );
+
+    document.getElementById("blacklist-check-btn").addEventListener("click", () =>
+      performAction("/blacklist_check", "Blacklist Check")
+    );
+
+    document.getElementById("whois-btn").addEventListener("click", () =>
+      performAction("/whois", "WHOIS Lookup")
+    );
+
+    document.getElementById("ssl-check-btn").addEventListener("click", () =>
+      performAction("/ssl_check", "SSL/TLS Certificate Check")
     );
 
     function copyToClipboard(text) {
